@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">💰</div>
+            <h2>Welcome Back</h2>
+            <p class="auth-subtitle">Log in to manage your income and expenses</p>
+        </div>
+
+        <form action="{{ url_for('login') }}" method="POST" class="auth-form" autocomplete="on">
+            <!-- Username or Email Field -->
+            <div class="form-group">
+                <label for="login_input" class="form-label">Username or Email</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">👤</span>
+                    <input 
+                        type="text" 
+                        id="login_input" 
+                        name="login_input" 
+                        class="form-control" 
+                        placeholder="Enter username or email" 
+                        value="{{ login_input or '' }}" 
+                        required 
+                        autofocus
+                    >
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔒</span>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="Enter your password" 
+                        required
+                    >
+                    <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password">
+                        👁️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Log In
+                </button>
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            <p>Don't have an account yet? <a href="{{ url_for('register') }}" class="auth-link">Create Account</a></p>
+        </div>
+
+        <!-- Student Help Box -->
+        <div class="info-tip-box">
+            <span class="tip-icon">💡</span>
+            <div class="tip-content">
+                <strong>First time here?</strong>
+                <p>Click "Create Account" above to register a new user in your MySQL database.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

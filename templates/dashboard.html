@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Welcome Header & Date Banner -->
+    <header class="dashboard-header">
+        <div class="header-titles">
+            <h1>Welcome back, <span class="highlight-user">{{ session.get('username') }}</span>! 👋</h1>
+            <p class="text-muted">Here is your financial overview for <strong>{{ current_date_display }}</strong></p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('add_income') }}" class="btn btn-success">
+                <span>➕</span> Add Income
+            </a>
+            <a href="{{ url_for('add_expense') }}" class="btn btn-danger">
+                <span>➖</span> Add Expense
+            </a>
+            <a href="{{ url_for('daily_summary') }}" class="btn btn-primary">
+                <span>🔔</span> Daily Summary
+            </a>
+        </div>
+    </header>
+
+    <!-- Daily Summary Notification Hero Card (Important Feature 7 & 8) -->
+    <section class="daily-alert-card {% if today_count == 0 %}daily-alert-empty{% elif today_balance > 0 %}daily-alert-positive{% elif today_balance < 0 %}daily-alert-negative{% else %}daily-alert-neutral{% endif %}">
+        <div class="daily-alert-icon">🔔</div>
+        <div class="daily-alert-content">
+            <div class="daily-alert-header">
+                <h3>Today's Expense Summary</h3>
+                <span class="daily-date-badge">{{ current_date_display }}</span>
+            </div>
+            
+            {% if today_count > 0 %}
+                <div class="daily-stats-row">
+                    <div class="daily-stat-pill">
+                        <span class="pill-label">Today's Income:</span>
+                        <strong class="pill-value text-success">{{ today_income | currency }}</strong>
+                    </div>
+                    <div class="daily-stat-pill">
+                        <span class="pill-label">Today's Expense:</span>
+                        <strong class="pill-value text-danger">{{ today_expenses | currency }}</strong>
+                    </div>
+                    <div class="daily-stat-pill">
+                        <span class="pill-label">Today's Balance:</span>
+                        <strong class="pill-value {% if today_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ today_balance | currency }}
+                        </strong>
+                    </div>
+                </div>
+
+                <p class="daily-motivational-msg">
+                    {% if today_balance > 0 %}
+                        🌟 <strong>Good job!</strong> You saved <strong>{{ today_balance | currency }}</strong> today.
+                    {% elif today_balance < 0 %}
+                        ⚠️ <strong>Notice:</strong> You spent <strong>{{ (today_expenses - today_income) | currency }}</strong> more than your earnings today.
+                    {% else %}
+                        ⚖️ <strong>Balanced:</strong> Your income and expenses were equal today.
+                    {% endif %}
+                </p>
+            {% else %}
+                <p class="daily-empty-msg">
+                    ℹ️ <strong>No transactions recorded for today yet.</strong> Click <a href="{{ url_for('add_income') }}">Add Income</a> or <a href="{{ url_for('add_expense') }}">Add Expense</a> to begin tracking today's finances!
+                </p>
+            {% endif %}
+        </div>
+        <div class="daily-alert-btn">
+            <a href="{{ url_for('daily_summary') }}" class="btn btn-sm btn-outline-primary">View Full Breakdown &rarr;</a>
+        </div>
+    </section>
+
+    <!-- Key Metrics Stats Cards -->
+    <section class="stats-grid">
+        <!-- Card 1: Total Income -->
+        <div class="stat-card card-income">
+            <div class="stat-icon-wrapper income-bg">
+                <span class="stat-icon">💵</span>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Income</span>
+                <h2 class="stat-value text-success">{{ total_income | currency }}</h2>
+                <span class="stat-subtext">All time earnings</span>
+            </div>
+        </div>
+
+        <!-- Card 2: Total Expenses -->
+        <div class="stat-card card-expense">
+            <div class="stat-icon-wrapper expense-bg">
+                <span class="stat-icon">💳</span>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Expenses</span>
+                <h2 class="stat-value text-danger">{{ total_expenses | currency }}</h2>
+                <span class="stat-subtext">All time expenditures</span>
+            </div>
+        </div>
+
+        <!-- Card 3: Current Balance -->
+        <div class="stat-card card-balance">
+            <div class="stat-icon-wrapper balance-bg">
+                <span class="stat-icon">🏦</span>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Current Balance</span>
+                <h2 class="stat-value {% if current_balance >= 0 %}text-primary{% else %}text-danger{% endif %}">
+                    {{ current_balance | currency }}
+                </h2>
+                <span class="stat-subtext">Income minus Expenses</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Today's Income -->
+        <div class="stat-card card-today-income">
+            <div class="stat-icon-wrapper today-income-bg">
+                <span class="stat-icon">📈</span>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Today's Income</span>
+                <h2 class="stat-value text-success">{{ today_income | currency }}</h2>
+                <span class="stat-subtext">Earned on {{ current_date_display }}</span>
+            </div>
+        </div>
+
+        <!-- Card 5: Today's Expenses -->
+        <div class="stat-card card-today-expense">
+            <div class="stat-icon-wrapper today-expense-bg">
+                <span class="stat-icon">📉</span>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Today's Expenses</span>
+                <h2 class="stat-value text-danger">{{ today_expenses | currency }}</h2>
+                <span class="stat-subtext">Spent on {{ current_date_display }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Two-Column Section: Recent Transactions & Category Breakdown -->
+    <div class="dashboard-columns">
+        <!-- Left Column: Recent Transactions -->
+        <div class="dashboard-column-main">
+            <div class="card recent-transactions-card">
+                <div class="card-header flex-between">
+                    <h3>Recent Transactions</h3>
+                    <a href="{{ url_for('transactions') }}" class="view-all-link">View All &rarr;</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_transactions %}
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>Category</th>
+                                        <th class="text-right">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in recent_transactions %}
+                                        <tr>
+                                            <td>{{ item.date.strftime('%d-%m-%Y') if item.date is not string else item.date }}</td>
+                                            <td>
+                                                <span class="badge badge-{{ item.type }}">
+                                                    {{ item.type | capitalize }}
+                                                </span>
+                                            </td>
+                                            <td><strong>{{ item.description }}</strong></td>
+                                            <td>
+                                                <span class="category-tag tag-{{ item.category | lower }}">
+                                                    {{ item.category }}
+                                                </span>
+                                            </td>
+                                            <td class="text-right {% if item.type == 'income' %}text-success{% else %}text-danger{% endif %} font-bold">
+                                                {% if item.type == 'income' %}+{% else %}-{% endif %}{{ item.amount | currency }}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <span class="empty-icon">📭</span>
+                            <h4>No transactions recorded yet</h4>
+                            <p>Add your first income or expense to see it here.</p>
+                            <div class="empty-actions">
+                                <a href="{{ url_for('add_income') }}" class="btn btn-sm btn-success">Add Income</a>
+                                <a href="{{ url_for('add_expense') }}" class="btn btn-sm btn-danger">Add Expense</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Expense Category Summary -->
+        <div class="dashboard-column-side">
+            <div class="card category-summary-card">
+                <div class="card-header">
+                    <h3>Expenses by Category</h3>
+                </div>
+                <div class="card-body">
+                    {% if category_summary %}
+                        <div class="category-list">
+                            {% for cat in category_summary %}
+                                <div class="category-item">
+                                    <div class="category-item-header">
+                                        <span class="category-name">
+                                            <span class="cat-dot cat-dot-{{ cat.category | lower }}"></span>
+                                            {{ cat.category }}
+                                        </span>
+                                        <span class="category-amount">{{ cat.total | currency }}</span>
+                                    </div>
+                                    <!-- Progress bar showing percentage of total expense -->
+                                    <div class="progress-bar-bg">
+                                        {% set percent = ((cat.total | float) / (total_expenses | float) * 100) if (total_expenses | float) > 0 else 0 %}
+                                        <div class="progress-bar-fill fill-{{ cat.category | lower }}" style="width: {{ percent | round(1) }}%;"></div>
+                                    </div>
+                                    <div class="category-item-footer">
+                                        <small class="text-muted">{{ cat.count }} transaction{% if cat.count > 1 %}s{% endif %}</small>
+                                        <small class="text-muted">{{ percent | round(1) }}%</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state-mini">
+                            <p class="text-muted">No expense categories to show yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

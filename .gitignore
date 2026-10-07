@@ -1,0 +1,12 @@
+# Byte-compiled / cache files
+__pycache__/
+
+# Virtual environments
+venv/
+
+# Database files
+*.db
+
+# Node dependencies
+node_modules/
+backend/node_modules/

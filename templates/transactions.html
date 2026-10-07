@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction History - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="transactions-container">
+    <!-- Page Header -->
+    <header class="page-header flex-between">
+        <div>
+            <h1>Transaction History 📜</h1>
+            <p class="text-muted">Review, filter, edit, and manage all your past income and expenses.</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('add_income') }}" class="btn btn-sm btn-success">➕ Add Income</a>
+            <a href="{{ url_for('add_expense') }}" class="btn btn-sm btn-danger">➖ Add Expense</a>
+        </div>
+    </header>
+
+    <!-- Filters Section -->
+    <section class="card filter-card">
+        <form method="GET" action="{{ url_for('transactions') }}" class="filter-form">
+            <div class="filter-grid">
+                <!-- Type Filter -->
+                <div class="filter-group">
+                    <label for="type" class="filter-label">Transaction Type</label>
+                    <select name="type" id="type" class="form-control form-control-sm">
+                        <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All Types</option>
+                        <option value="income" {% if type_filter == 'income' %}selected{% endif %}>Income Only</option>
+                        <option value="expense" {% if type_filter == 'expense' %}selected{% endif %}>Expense Only</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="filter-group">
+                    <label for="category" class="filter-label">Category</label>
+                    <select name="category" id="category" class="form-control form-control-sm">
+                        <option value="all" {% if category_filter == 'all' %}selected{% endif %}>All Categories</option>
+                        <option value="Income" {% if category_filter == 'Income' %}selected{% endif %}>Income</option>
+                        {% for cat in expense_categories %}
+                            <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Specific Date Filter -->
+                <div class="filter-group">
+                    <label for="date" class="filter-label">Specific Date</label>
+                    <input type="date" name="date" id="date" class="form-control form-control-sm" value="{{ date_filter or '' }}">
+                </div>
+
+                <!-- Specific Month Filter -->
+                <div class="filter-group">
+                    <label for="month" class="filter-label">By Month</label>
+                    <input type="month" name="month" id="month" class="form-control form-control-sm" value="{{ month_filter or '' }}">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="filter-actions-group">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        🔍 Apply Filter
+                    </button>
+                    <a href="{{ url_for('transactions') }}" class="btn btn-outline-secondary btn-sm" title="Clear all filters">
+                        Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- Filter Summary Bar -->
+    <div class="filtered-summary-bar">
+        <div class="summary-pill">
+            <span>Filtered Income:</span>
+            <strong class="text-success">{{ filtered_income | currency }}</strong>
+        </div>
+        <div class="summary-pill">
+            <span>Filtered Expenses:</span>
+            <strong class="text-danger">{{ filtered_expense | currency }}</strong>
+        </div>
+        <div class="summary-pill">
+            <span>Net Result:</span>
+            <strong class="{% if filtered_net >= 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ filtered_net | currency }}
+            </strong>
+        </div>
+        <div class="summary-pill count-pill">
+            <span>Total Records:</span>
+            <strong>{{ transactions | length }}</strong>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card table-card">
+        <div class="card-body">
+            {% if transactions %}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th class="text-right">Amount</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in transactions %}
+                                <tr>
+                                    <td class="date-cell">
+                                        {{ item.date.strftime('%d-%m-%Y') if item.date is not string else item.date }}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ item.type }}">
+                                            {{ item.type | capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="category-tag tag-{{ item.category | lower }}">
+                                            {{ item.category }}
+                                        </span>
+                                    </td>
+                                    <td class="desc-cell">
+                                        <strong>{{ item.description }}</strong>
+                                    </td>
+                                    <td class="text-right font-bold {% if item.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if item.type == 'income' %}+{% else %}-{% endif %}{{ item.amount | currency }}
+                                    </td>
+                                    <td class="text-center actions-cell">
+                                        {% if item.type == 'income' %}
+                                            <a href="{{ url_for('edit_income', income_id=item.id) }}" class="btn-action btn-action-edit" title="Edit this income">
+                                                ✏️ Edit
+                                            </a>
+                                            <form action="{{ url_for('delete_income', income_id=item.id) }}" method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this income transaction of {{ item.amount | currency }}?');">
+                                                <button type="submit" class="btn-action btn-action-delete" title="Delete this income">
+                                                    🗑️ Delete
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <a href="{{ url_for('edit_expense', expense_id=item.id) }}" class="btn-action btn-action-edit" title="Edit this expense">
+                                                ✏️ Edit
+                                            </a>
+                                            <form action="{{ url_for('delete_expense', expense_id=item.id) }}" method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this expense transaction of {{ item.amount | currency }}?');">
+                                                <button type="submit" class="btn-action btn-action-delete" title="Delete this expense">
+                                                    🗑️ Delete
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <span class="empty-icon">🔍</span>
+                    <h4>No transactions found</h4>
+                    <p>There are no transactions matching your selected filters.</p>
+                    <div class="empty-actions">
+                        <a href="{{ url_for('transactions') }}" class="btn btn-secondary btn-sm">Clear Filters</a>
+                        <a href="{{ url_for('add_income') }}" class="btn btn-success btn-sm">Add Income</a>
+                        <a href="{{ url_for('add_expense') }}" class="btn btn-danger btn-sm">Add Expense</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

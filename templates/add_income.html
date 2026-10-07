@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Add Income - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="form-container-wrapper">
+    <div class="form-card">
+        <div class="form-card-header income-theme-header">
+            <div class="header-icon">➕💵</div>
+            <div class="header-texts">
+                <h2>Add Income</h2>
+                <p>Record money you received into your account</p>
+            </div>
+        </div>
+
+        <form action="{{ url_for('add_income') }}" method="POST" class="standard-form">
+            <!-- Amount Field -->
+            <div class="form-group">
+                <label for="amount" class="form-label">
+                    Amount (<span class="currency-symbol">₹</span>) <span class="required-star">*</span>
+                </label>
+                <div class="input-wrapper">
+                    <span class="input-icon">₹</span>
+                    <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0.01" 
+                        id="amount" 
+                        name="amount" 
+                        class="form-control" 
+                        placeholder="e.g. 2000.00" 
+                        value="{{ amount or '' }}" 
+                        required 
+                        autofocus
+                    >
+                </div>
+                <small class="form-help">Enter positive numerical amount in Rupees.</small>
+            </div>
+
+            <!-- Description Field -->
+            <div class="form-group">
+                <label for="description" class="form-label">
+                    Description <span class="required-star">*</span>
+                </label>
+                <div class="input-wrapper">
+                    <span class="input-icon">📝</span>
+                    <input 
+                        type="text" 
+                        id="description" 
+                        name="description" 
+                        class="form-control" 
+                        placeholder="e.g. Part-time work, Salary, Freelance project" 
+                        value="{{ description or '' }}" 
+                        maxlength="255" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Date Field -->
+            <div class="form-group">
+                <label for="date" class="form-label">
+                    Date <span class="required-star">*</span>
+                </label>
+                <div class="input-wrapper">
+                    <span class="input-icon">📅</span>
+                    <input 
+                        type="date" 
+                        id="date" 
+                        name="date" 
+                        class="form-control" 
+                        value="{{ date or default_date or current_date_str }}" 
+                        required
+                    >
+                </div>
+                <small class="form-help">Defaults to today's date, or pick any past/future date.</small>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-card-actions">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-success btn-lg">
+                    <span>➕</span> Add Income
+                </button>
+            </div>
+        </form>
+
+        <!-- Example Banner for Student Reference -->
+        <div class="example-box">
+            <span class="example-title">💡 Example Entry:</span>
+            <div class="example-grid">
+                <div><strong>Amount:</strong> ₹2,000</div>
+                <div><strong>Description:</strong> Part-time work</div>
+                <div><strong>Date:</strong> {{ current_date_display }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

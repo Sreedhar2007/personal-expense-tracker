@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Summary - Personal Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="daily-summary-container">
+    <!-- Header with Date Selector -->
+    <header class="page-header flex-between">
+        <div>
+            <h1>Daily Summary 🔔</h1>
+            <p class="text-muted">Review your exact earnings, spending, and savings for any specific day.</p>
+        </div>
+
+        <!-- Date Picker Form -->
+        <form method="GET" action="{{ url_for('daily_summary') }}" class="date-picker-form">
+            <label for="date-select" class="form-label mb-0">Select Date:</label>
+            <input 
+                type="date" 
+                id="date-select" 
+                name="date" 
+                class="form-control form-control-sm" 
+                value="{{ query_date }}" 
+                onchange="this.form.submit()"
+            >
+            {% if query_date != current_date_str %}
+                <a href="{{ url_for('daily_summary') }}" class="btn btn-sm btn-outline-secondary">Today</a>
+            {% endif %}
+        </form>
+    </header>
+
+    <!-- Prominent Daily Summary Hero Box (Requirement 7) -->
+    <section class="card daily-summary-hero-card summary-card-{{ summary_badge }}">
+        <div class="summary-hero-header">
+            <div class="summary-hero-badge">
+                <span class="bell-icon">🔔</span>
+                <span>{% if query_date == current_date_str %}Today's Summary{% else %}Daily Summary for {{ formatted_date }}{% endif %}</span>
+            </div>
+            <span class="summary-date-tag">{{ formatted_date }}</span>
+        </div>
+
+        <div class="summary-numbers-grid">
+            <!-- Day Income -->
+            <div class="summary-number-box income-box">
+                <span class="box-label">{% if query_date == current_date_str %}Today's Income{% else %}Total Income{% endif %}</span>
+                <h2 class="box-value text-success">{{ day_income | currency }}</h2>
+                <span class="box-subtext">Total received</span>
+            </div>
+
+            <!-- Day Expense -->
+            <div class="summary-number-box expense-box">
+                <span class="box-label">{% if query_date == current_date_str %}Today's Expense{% else %}Total Expense{% endif %}</span>
+                <h2 class="box-value text-danger">{{ day_expense | currency }}</h2>
+                <span class="box-subtext">Total spent</span>
+            </div>
+
+            <!-- Day Balance -->
+            <div class="summary-number-box balance-box">
+                <span class="box-label">{% if query_date == current_date_str %}Today's Balance{% else %}Net Balance{% endif %}</span>
+                <h2 class="box-value {% if day_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ day_balance | currency }}
+                </h2>
+                <span class="box-subtext">Income minus Expense</span>
+            </div>
+        </div>
+
+        <!-- Notification Message Banner -->
+        <div class="summary-verdict-banner banner-{{ summary_badge }}">
+            <p class="verdict-text">{{ summary_message }}</p>
+        </div>
+    </section>
+
+    <!-- Quick Add Buttons -->
+    <div class="daily-quick-actions">
+        <a href="{{ url_for('add_income') }}?date={{ query_date }}" class="btn btn-success">➕ Record Income for this day</a>
+        <a href="{{ url_for('add_expense') }}?date={{ query_date }}" class="btn btn-danger">➖ Record Expense for this day</a>
+    </div>
+
+    <!-- Day Breakdown Tables (Income & Expenses for Selected Day) -->
+    <div class="daily-breakdown-grid">
+        <!-- Incomes of the Day -->
+        <div class="card breakdown-card">
+            <div class="card-header flex-between">
+                <h3>💵 Income Records ({{ day_income_items | length }})</h3>
+                <strong class="text-success">{{ day_income | currency }}</strong>
+            </div>
+            <div class="card-body">
+                {% if day_income_items %}
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th class="text-right">Amount</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in day_income_items %}
+                                    <tr>
+                                        <td><strong>{{ item.description }}</strong></td>
+                                        <td class="text-right text-success font-bold">+{{ item.amount | currency }}</td>
+                                        <td class="text-center">
+                                            <a href="{{ url_for('edit_income', income_id=item.id) }}" class="btn-action btn-action-edit">Edit</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state-mini">
+                        <p class="text-muted">No income recorded for this date.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Expenses of the Day -->
+        <div class="card breakdown-card">
+            <div class="card-header flex-between">
+                <h3>💳 Expense Records ({{ day_expense_items | length }})</h3>
+                <strong class="text-danger">{{ day_expense | currency }}</strong>
+            </div>
+            <div class="card-body">
+                {% if day_expense_items %}
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th class="text-right">Amount</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in day_expense_items %}
+                                    <tr>
+                                        <td>
+                                            <span class="category-tag tag-{{ item.category | lower }}">
+                                                {{ item.category }}
+                                            </span>
+                                        </td>
+                                        <td><strong>{{ item.description }}</strong></td>
+                                        <td class="text-right text-danger font-bold">-{{ item.amount | currency }}</td>
+                                        <td class="text-center">
+                                            <a href="{{ url_for('edit_expense', expense_id=item.id) }}" class="btn-action btn-action-edit">Edit</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state-mini">
+                        <p class="text-muted">No expenses recorded for this date.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

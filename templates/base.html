@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Personal Expense Tracker{% endblock %}</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('login') }}{% endif %}" class="nav-brand">
+                <span class="brand-icon">💰</span>
+                <span class="brand-text">ExpenseTracker</span>
+            </a>
+
+            <!-- Mobile Menu Toggle Button -->
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <!-- Navigation Links -->
+            <div class="nav-menu" id="navMenu">
+                {% if session.get('user_id') %}
+                    <ul class="nav-links">
+                        <li>
+                            <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                                📊 Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('add_income') }}" class="nav-link {% if request.endpoint == 'add_income' %}active{% endif %}">
+                                ➕ Add Income
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('add_expense') }}" class="nav-link {% if request.endpoint == 'add_expense' %}active{% endif %}">
+                                ➖ Add Expense
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('transactions') }}" class="nav-link {% if request.endpoint == 'transactions' %}active{% endif %}">
+                                📜 Transaction History
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('daily_summary') }}" class="nav-link {% if request.endpoint == 'daily_summary' %}active{% endif %}">
+                                🔔 Daily Summary
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="nav-user">
+                        <span class="user-greeting">👤 {{ session.get('username') }}</span>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+                    </div>
+                {% else %}
+                    <div class="nav-auth">
+                        <a href="{{ url_for('login') }}" class="nav-link {% if request.endpoint == 'login' %}active{% endif %}">Login</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Register</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-alert flash-{{ category }}" role="alert">
+                        <span class="flash-icon">
+                            {% if category == 'success' %}✅
+                            {% elif category == 'danger' %}❌
+                            {% elif category == 'warning' %}⚠️
+                            {% else %}ℹ️{% endif %}
+                        </span>
+                        <span class="flash-text">{{ message }}</span>
+                        <button type="button" class="flash-close" onclick="this.parentElement.remove();">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Daily Notification Modal (Pop-up on Dashboard load) -->
+    {% if session.get('user_id') and request.endpoint == 'dashboard' %}
+    <div id="dailyNotificationModal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="bell-ring">🔔</span> Today's Expense Summary
+                </div>
+                <button type="button" class="modal-close-btn" id="closeNotificationModal">&times;</button>
+            </div>
+            <div class="modal-body" id="modalNotificationContent">
+                <!-- Dynamically populated via script.js -->
+                <div class="loading-spinner">Loading today's figures...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" id="dismissModalBtn">Dismiss</button>
+                <a href="{{ url_for('daily_summary') }}" class="btn btn-primary btn-sm">View Full Details</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>Personal Expense Tracker &bull; Student Project &bull; Python Flask &amp; MySQL</p>
+            <p class="footer-subtext">Manage your finances smartly every day.</p>
+        </div>
+    </footer>
+
+    <!-- Main JavaScript File -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
